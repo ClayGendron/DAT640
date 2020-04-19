@@ -9,6 +9,7 @@ library(here)
 # data("iris")
 # write.csv(as_data_frame(iris),here::here("Data","iris.csv"))
 iris <- read.csv(here::here("Data","iris.csv"))[,-1]
+rattle()
 
 # eda
 
