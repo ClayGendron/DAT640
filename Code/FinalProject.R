@@ -2,6 +2,7 @@ library(tidyverse)
 library(tidymodels)
 library(rattle)
 library(here)
+library(skimr)
 
 # data pull
 
@@ -23,3 +24,4 @@ colnames(coil) <-
     "AINBOED","ABYSTAND","CARAVAN")
 
 summary(coil)
+skim(coil)
