@@ -5,10 +5,12 @@ library(here)
 library(skimr)
 library(ggcorrplot)
 library(reshape2)
+library(grid)
 
 # data pull
 
 coil <- read.delim(here::here("Data","FinalData","ticdata2000.txt"), header=FALSE)
+# write.csv(coil, file = here::here( "Data","FinalData","coil.csv"))
 
 colnames(coil) <- 
   c("MOSTYPE","MAANTHUI","MGEMOMV","MGEMLEEF","MOSHOOFD","MGODRK","MGODPR",
@@ -41,8 +43,14 @@ corrplot::corrplot(cor_products_p)
 
 # other plots
 
-plot1_df <- coil %>% 
+plot_df <- coil %>% 
   group_by(MINKGEM) %>% 
   summarise(CARAVAN = mean(CARAVAN), POLICIES = n())
 
-ggplot(plot1_df, aes(MINKGEM, CARAVAN)) + geom_point()
+plot1 <- ggplot(plot_df, aes(x = MINKGEM)) + 
+  geom_point(aes(y = CARAVAN))
+
+plot2 <- ggplot(plot_df, aes(x = MINKGEM)) + 
+  geom_line(aes(y = POLICIES))
+
+grid.draw(rbind(ggplotGrob(plot1), ggplotGrob(plot2)))
