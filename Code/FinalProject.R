@@ -27,6 +27,8 @@ colnames(coil) <-
     "APERSONG","AGEZONG","AWAOREG","ABRAND","AZEILPL","APLEZIER","AFIETS",
     "AINBOED","ABYSTAND","CARAVAN")
 
+# summarize data and understand distributions
+
 summary(coil)
 skim(coil)
 
@@ -40,6 +42,8 @@ corrplot::corrplot(cor_zip_p)
 
 cor_products_p <- cor(coil[,-c(1:64)])
 corrplot::corrplot(cor_products_p)
+
+cor_dem_p <- cor(coil[-c(44:86)],coil$CARAVAN)
 
 # other plots
 
