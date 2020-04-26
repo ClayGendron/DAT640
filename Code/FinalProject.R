@@ -3,6 +3,8 @@ library(tidymodels)
 library(rattle)
 library(here)
 library(skimr)
+library(ggcorrplot)
+library(reshape2)
 
 # data pull
 
@@ -25,3 +27,22 @@ colnames(coil) <-
 
 summary(coil)
 skim(coil)
+
+# correlation plots
+
+cor_p <- cor(coil)
+corrplot::corrplot(cor_p)
+
+cor_zip_p <- cor(coil[,-c(44:85)])
+corrplot::corrplot(cor_zip_p)
+
+cor_products_p <- cor(coil[,-c(1:64)])
+corrplot::corrplot(cor_products_p)
+
+# other plots
+
+plot1_df <- coil %>% 
+  group_by(MINKGEM) %>% 
+  summarise(CARAVAN = mean(CARAVAN), POLICIES = n())
+
+ggplot(plot1_df, aes(MINKGEM, CARAVAN)) + geom_point()
