@@ -45,6 +45,8 @@ colnames(coil2) <-
     "AINBOED","ABYSTAND","CARAVAN")
 #write.csv(coil2, file = here::here( "Data","FinalData","coiltest.csv"))
 
+# summarize data and understand distributions
+
 summary(coil)
 skim(coil)
 
@@ -61,6 +63,8 @@ corrplot::corrplot(cor_zip_p)
 
 cor_products_p <- cor(coil[,-c(1:64)])
 corrplot::corrplot(cor_products_p)
+
+cor_dem_p <- cor(coil[-c(44:86)],coil$CARAVAN)
 
 # other plots
 
