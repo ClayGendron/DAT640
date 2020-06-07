@@ -8,6 +8,7 @@ library(reshape2)
 library(grid)
 library(caret)
 library(klaR)
+library(ROCR)
 
 # data pull
 
@@ -42,8 +43,8 @@ colnames(coil2) <-
     "PINBOED","PBYSTAND","AWAPART","AWABEDR","AWALAND","APERSAUT","ABESAUT",
     "AMOTSCO","AVRAAUT","AAANHANG","ATRACTOR","AWERKT","ABROM","ALEVEN",
     "APERSONG","AGEZONG","AWAOREG","ABRAND","AZEILPL","APLEZIER","AFIETS",
-    "AINBOED","ABYSTAND","CARAVAN")
-#write.csv(coil2, file = here::here( "Data","FinalData","coiltest.csv"))
+    "AINBOED","ABYSTAND")
+# write.csv(coil2, file = here::here( "Data","FinalData","coiltest.csv"))
 
 # summarize data and understand distributions
 
@@ -51,7 +52,7 @@ summary(coil)
 skim(coil)
 
 train <- coil
-train <-  coil2
+test <-  coil2
 
 # correlation plots
 
@@ -82,4 +83,71 @@ grid.draw(rbind(ggplotGrob(plot1), ggplotGrob(plot2)))
 
 # build model naive bayes
 
+# remove non-variant predictors
+mod_train <- train[,-c(50,53,71,74)]
+colnames(mod_train) <- 
+  c("MOSTYPE","MAANTHUI","MGEMOMV","MGEMLEEF","MOSHOOFD","MGODRK","MGODPR",
+    "MGODOV","MGODGE","MRELGE","MRELSA","MRELOV","MFALLEEN","MFGEKIND",
+    "MFWEKIND","MOPLHOOG","MOPLMIDD","MOPLLAAG","MBERHOOG","MBERZELF","MBERBOER",
+    "MBERMIDD","MBERARBG","MBERARBO","MSKA","MSKB1","MSKB2","MSKC",
+    "MSKD","MHHUUR","MHKOOP","MAUT1","MAUT2","MAUT0","MZFONDS",
+    "MZPART","MINKM30","MINK3045","MINK4575","MINK7512","MINK123M",
+    "MINKGEM","MKOOPKLA","PWAPART","PWABEDR","PWALAND","PPERSAUT","PBESAUT",
+    "PMOTSCO","PAANHANG","PTRACTOR","PBROM","PLEVEN",
+    "PPERSONG","PGEZONG","PWAOREG","PBRAND","PZEILPL","PPLEZIER","PFIETS",
+    "PINBOED","PBYSTAND","AWAPART","AWABEDR","AWALAND","APERSAUT","ABESAUT",
+    "AMOTSCO","AAANHANG","ATRACTOR","ABROM","ALEVEN",
+    "APERSONG","AGEZONG","AWAOREG","ABRAND","AZEILPL","APLEZIER","AFIETS",
+    "AINBOED","ABYSTAND","CARAVAN")
+
+mod_test <- test[,-c(50,53,71,74)]
+colnames(mod_test) <- 
+  c("MOSTYPE","MAANTHUI","MGEMOMV","MGEMLEEF","MOSHOOFD","MGODRK","MGODPR",
+    "MGODOV","MGODGE","MRELGE","MRELSA","MRELOV","MFALLEEN","MFGEKIND",
+    "MFWEKIND","MOPLHOOG","MOPLMIDD","MOPLLAAG","MBERHOOG","MBERZELF","MBERBOER",
+    "MBERMIDD","MBERARBG","MBERARBO","MSKA","MSKB1","MSKB2","MSKC",
+    "MSKD","MHHUUR","MHKOOP","MAUT1","MAUT2","MAUT0","MZFONDS",
+    "MZPART","MINKM30","MINK3045","MINK4575","MINK7512","MINK123M",
+    "MINKGEM","MKOOPKLA","PWAPART","PWABEDR","PWALAND","PPERSAUT","PBESAUT",
+    "PMOTSCO","PAANHANG","PTRACTOR","PBROM","PLEVEN",
+    "PPERSONG","PGEZONG","PWAOREG","PBRAND","PZEILPL","PPLEZIER","PFIETS",
+    "PINBOED","PBYSTAND","AWAPART","AWABEDR","AWALAND","APERSAUT","ABESAUT",
+    "AMOTSCO","AAANHANG","ATRACTOR","ABROM","ALEVEN",
+    "APERSONG","AGEZONG","AWAOREG","ABRAND","AZEILPL","APLEZIER","AFIETS",
+    "AINBOED","ABYSTAND")
+
+mod_train$CARAVAN <- factor(mod_train$CARAVAN)
+summary(mod_train)
+
+# apply recipies
+
+caravan_rec <- recipe(CARAVAN ~., data = mod_train) %>%
+    step_normalize(all_numeric()) %>% 
+    step_BoxCox(all_numeric())
+train_rec <- prep(caravan_rec, training = mod_train)
+nb_train <- bake(train_rec, new_data = mod_train)
+
+# train model
+
+nb_caravan_mod <- NaiveBayes(CARAVAN ~., data = nb_train)
+train_p <- nb_caravan_mod %>% predict(nb_train)
+mod_train_p <- cbind(nb_train,train_p)
+
+# model assesment
+
+cf_matrix <- table(mod_train_p$CARAVAN,mod_train_p$class)
+caret::confusionMatrix(cf_matrix)
+
+train_pred <- as.numeric(train_p$posterior[,c(2)])
+train_lab <- as.numeric(nb_train$CARAVAN)
+ROCRpred <- prediction(train_pred, train_lab)
+ROCRperf <- performance(ROCRpred, "tpr", "fpr")
+
+plot(ROCRperf)
+
+riskchart(train_pred,
+          nb_train$CARAVAN, 
+          title="Model Performance: Cross-Selling Caravan Insurance to Customers", 
+          recall.name="Targeted Cross-Selling", precision.name = "Strick Rate",
+          show.lift=TRUE, show.precision=TRUE, legend.horiz=FALSE, show.maximal = TRUE) %>% print()
 

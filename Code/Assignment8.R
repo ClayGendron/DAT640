@@ -379,4 +379,6 @@ if (length(miss.list))
 }
 performance(pred, "auc")
 
+crs$validate
+
 
